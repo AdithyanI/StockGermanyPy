@@ -46,7 +46,9 @@ def extractPerformance(url):
 	values1 = [navigableStringToFloat(h2.string) for h2 in soup.findAll("td", "right  down")]	
 	values2 = [navigableStringToFloat(h2.string) for h2 in soup.findAll("td", "right  up")]	
 	values3 = [navigableStringToFloat(h2.string) for h2 in soup.findAll("td", "right last up")]
-	performance = [values0,values1[0],values1[1],values1[2],values1[3],values2[0],values3[0]] 
+	performance = [values0,values1[0],values1[1],values1[2],values1[3],yearlyPerformance(values2[0],3),yearlyPerformance(values3[0],5)] 
+	print yearlyPerformance(values2[0],3)
+	print yearlyPerformance(values3[0],5)
 	return performance
 
 def navigableStringToFloat(nvStr):
@@ -54,6 +56,10 @@ def navigableStringToFloat(nvStr):
 	frmtdString = string.strip('%').replace(',','.')
 	flt = float(frmtdString)
 	return flt
+	
+def yearlyPerformance(value,years):
+	yearly = ((1+value/100)**(1.0/years)-1)*100
+	return round(yearly,2)
 
 if __name__ == '__main__':
 	print "The main file is being executed"
