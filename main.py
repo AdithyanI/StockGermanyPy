@@ -29,26 +29,34 @@ def main():
 	x = PrettyTable(["Stock", "1day", "1week", "1month", "3month", "1year", "3years", "5years"])
 	x.align["City name"] = "l" # Left align city names
 	x.padding_width = 1 # One space between column edges and contents (default)
-	stocks = {'Comstage MSCI World': 'https://www.boerse-stuttgart.de/en/stock-exchange/securities-and-markets/exchange-traded-products/exchange-traded-funds/factsheet/?ID_NOTATION=26562449',
-			  'Comstage DAX': 'https://www.boerse-stuttgart.de/en/stock-exchange/securities-and-markets/exchange-traded-products/exchange-traded-funds/factsheet/?ID_NOTATION=24526432'}	
+	stocks = {'Comstage DAX' : 'https://www.maxblue.de/maerkte-analysen/boersen-kurse/fonds-detailseite.charts.html?ID_NOTATION=24379520',
+			  'Comstage MSCI World' : 'https://www.maxblue.de/maerkte-analysen/boersen-kurse/fonds-detailseite.charts.html?ID_NOTATION=26312020',
+			  'Comstage MSCI EM' : 'https://www.maxblue.de/maerkte-analysen/boersen-kurse/fonds-detailseite.charts.html?ID_NOTATION=52432566'}	
+#	stocks = {'Comstage MSCI EM' : '\033[94m https://www.maxblue.de/maerkte-analysen/boersen-kurse/fonds-detailseite.charts.html?ID_NOTATION=52432566'}	
 	for name in stocks:
 		x.add_row([name] + extractPerformance(stocks[name]))
 	print x
 
 def extractPerformance(url):
+	performance = ['-'] * 7
 	page = urllib2.urlopen(url)
 	soup = BeautifulSoup(page.read())
 	# This one day difference is slightly a tricky thing to extract.
-	values02 = [h2.contents[1] for h2 in soup.findAll('td', {'class': 'left down'})]	
-	soupForValue0 = BeautifulSoup(''.join(values02[1]))
-	values0 = navigableStringToFloat(soupForValue0)
-	# Extracting other is fairly easy.
-	values1 = [navigableStringToFloat(h2.string) for h2 in soup.findAll("td", "right  down")]	
-	values2 = [navigableStringToFloat(h2.string) for h2 in soup.findAll("td", "right  up")]	
-	values3 = [navigableStringToFloat(h2.string) for h2 in soup.findAll("td", "right last up")]
-	performance = [values0,values1[0],values1[1],values1[2],values1[3],yearlyPerformance(values2[0],3),yearlyPerformance(values3[0],5)] 
-	print yearlyPerformance(values2[0],3)
-	print yearlyPerformance(values3[0],5)
+	value = soup.findAll("div", "col-xs-6")[7].span.contents[0]	
+	performance[0] = (navigableStringToFloat(value.split('/')[1]))
+	tmp = soup.findAll("td", "idms_right")[0:6]
+	for idx, h in enumerate(tmp):
+		if h.span is not None:
+			if idx == 4: 
+				performance[idx+1] = yearlyPerformance(navigableStringToFloat(h.span.contents[0]),3)
+			elif idx == 5:
+				performance[idx+1] = yearlyPerformance(navigableStringToFloat(h.span.contents[0]),5)
+			else:
+				performance[idx+1] = navigableStringToFloat(h.span.contents[0])	 
+	# First extract the corresponding "td" class element.
+	# Second extract the span child element of the corresponding element.
+	# Third extract the contents, if there are contents.
+	# Convert the extracted navigableStringToFloat
 	return performance
 
 def navigableStringToFloat(nvStr):
